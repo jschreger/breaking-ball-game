@@ -1,7 +1,7 @@
 // flight.js — arcade jet model. Three.js conventions: object forward is -z.
 // State: pos (Vector3), quat (Quaternion), vel (Vector3), speed (m/s scalar).
 
-import * as THREE from 'three';
+import * as THREE from './vendor/three.module.js';
 
 const G = 9.81;
 export const CRUISE_REF_MS = 92;   // full-throttle level speed

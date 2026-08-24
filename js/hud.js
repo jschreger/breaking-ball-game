@@ -27,13 +27,13 @@ export class HUD {
   }
 
   // ------------------------------------------------------------- menu
-  renderMenu(pitches, save, onStart) {
+  renderMenu(pitches, save) {
     const list = $('menu-list');
     list.innerHTML = '';
     pitches.forEach((p, i) => {
       const unlocked = i < save.unlocked;
       const best = save.best[p.id];
-      const card = document.createElement('button');
+      const card = document.createElement('div');
       card.className = 'card' + (unlocked ? '' : ' locked');
       card.innerHTML = `
         <div class="card-top">
@@ -42,7 +42,6 @@ export class HUD {
         </div>
         <div class="card-tag">${p.tag}</div>
         <div class="card-desc">${unlocked ? p.desc : 'Land the previous pitch to unlock.'}</div>`;
-      if (unlocked) card.onclick = () => onStart(i);
       list.appendChild(card);
     });
   }

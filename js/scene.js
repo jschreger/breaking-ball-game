@@ -2,7 +2,7 @@
 // Designer spec: plane = baseball with wings; carrier bigger, with parked
 // planes; NO ghost ribbon — the player flies orange gates themselves.
 
-import * as THREE from 'three';
+import * as THREE from './vendor/three.module.js';
 
 const DECK_TOP = 21;
 const HULL_LEN = 300, DECK_W = 74, DECK_L = 290;

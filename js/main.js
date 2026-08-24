@@ -49,7 +49,8 @@ class Game {
     this.nextGate = 0;
 
     this.bindInput();
-    this.hud.renderMenu(PITCHES, this.save, i => this.enterCruise(i));
+    this.hud.renderMenu(PITCHES, this.save);
+    $('takeoff').onclick = () => this.enterCruise(null);
     this.hud.showScreen('menu');
     $('loading').classList.remove('visible');
 
@@ -105,7 +106,7 @@ class Game {
 
   toMenu() {
     this.state = 'menu';
-    this.hud.renderMenu(PITCHES, this.save, i => this.enterCruise(i));
+    this.hud.renderMenu(PITCHES, this.save);
     this.hud.showScreen('menu');
   }
 
@@ -206,7 +207,7 @@ class Game {
     const hasNext = this.pitchIndex + 1 < PITCHES.length;
     $('deb-next-label').textContent = hasNext ? `NEXT: ${PITCHES[this.pitchIndex + 1].name.toUpperCase()}` : 'MENU';
     $('deb-next').onclick = () => {
-      hasNext ? this.enterCruise(this.pitchIndex + 1) : this.toMenu();
+      hasNext ? this.enterCruise(null) : this.toMenu();   // NEXT → call the next pitch in the air
     };
   }
 
@@ -346,6 +347,6 @@ class Game {
 }
 
 // three is needed in main for vectors/clock
-import * as THREE from 'three';
+import * as THREE from './vendor/three.module.js';
 
 window.addEventListener('DOMContentLoaded', () => { window.__game = new Game(); window.THREE = THREE; });

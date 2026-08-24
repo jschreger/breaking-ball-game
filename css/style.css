@@ -1,0 +1,228 @@
+/* BREAKING BALL — UI styling */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0f14;
+  --panel: rgba(13, 20, 28, 0.94);
+  --cyan: #38e1ff;
+  --orange: #ff9f43;
+  --green: #3ddc84;
+  --red: #ff5252;
+  --dim: #8fa3b5;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: #dfe9f2;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#view canvas { display: block; }
+
+/* ---------------- overlays ---------------- */
+.screen {
+  position: fixed; inset: 0;
+  display: none;
+  align-items: center; justify-content: center;
+  background: rgba(4, 8, 12, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 10;
+}
+.screen.visible { display: flex; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid #223140;
+  border-radius: 10px;
+  padding: 28px 34px;
+  max-width: 720px;
+  width: min(92vw, 720px);
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+}
+.panel.wide { max-width: 900px; }
+
+h1 {
+  font-size: 30px;
+  letter-spacing: 4px;
+  color: var(--cyan);
+  margin-bottom: 4px;
+}
+h2 { color: var(--cyan); letter-spacing: 3px; margin-bottom: 6px; }
+.sub { letter-spacing: 2px; color: var(--orange); font-size: 13px; margin-bottom: 10px; }
+.sub.dim, .dim { color: var(--dim); }
+.foot { margin-top: 14px; }
+
+#brief-desc, .panel p { line-height: 1.5; margin-bottom: 12px; }
+
+/* ---------------- menu cards ---------------- */
+#menu-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.card {
+  text-align: left;
+  background: #101a24;
+  border: 1px solid #23374a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+.card.locked { opacity: 0.45; cursor: not-allowed; }
+.card-name { font-weight: bold; color: #fff; }
+.card-best { float: right; color: var(--green); font-size: 12px; }
+.card-tag { color: var(--orange); font-size: 11px; letter-spacing: 1px; margin: 4px 0; }
+.card-desc { color: var(--dim); font-size: 12px; line-height: 1.4; }
+
+/* ---------------- buttons ---------------- */
+.btn {
+  font: inherit;
+  background: #14212e;
+  border: 1px solid #2c4258;
+  color: #dfe9f2;
+  border-radius: 7px;
+  padding: 11px 20px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  margin-top: 16px;
+  transition: border-color .15s;
+}
+.btn:hover { border-color: var(--cyan); }
+.btn.primary { background: var(--cyan); color: #06131c; border-color: var(--cyan); font-weight: bold; }
+.btn.primary kbd, .btn kbd {
+  background: rgba(255,255,255,0.12); border-radius: 4px; padding: 1px 5px; font-size: 11px;
+}
+.btnrow { display: flex; gap: 12px; justify-content: center; }
+.btnrow.col { flex-direction: column; }
+
+/* ---------------- brief / debrief ---------------- */
+.cols {
+  display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;
+  margin: 10px 0 6px;
+}
+#brief-stats td { padding: 3px 14px 3px 0; font-size: 13px; }
+#brief-stats td:first-child { color: var(--dim); }
+canvas.plot, #brief-side, #brief-top, #deb-side, #deb-top {
+  border: 1px solid #223140; border-radius: 6px;
+}
+
+.deb-head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 8px; }
+.grade { font-size: 42px; font-weight: bold; letter-spacing: 3px; }
+.g-ok     { color: var(--green); }
+.g-okish  { color: #b9e38a; }
+.g-nowave { color: #ffd166; }
+.g-bolter { color: var(--orange); }
+.g-cut    { color: var(--red); }
+#deb-score { color: var(--dim); font-size: 18px; }
+#deb-notes { list-style: none; margin-bottom: 6px; }
+#deb-notes li::before { content: "▸ "; color: var(--cyan); }
+#deb-notes li { padding: 2px 0; font-size: 14px; }
+
+/* ---------------- flight HUD ---------------- */
+#hud-flight { position: fixed; inset: 0; pointer-events: none; z-index: 5; display: none; }
+.gauge {
+  position: absolute;
+  background: rgba(10, 16, 22, 0.72);
+  border: 1px solid #223140;
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 170px;
+}
+.left-top { top: 18px; left: 18px; }
+.right-top { top: 18px; right: 18px; }
+.gauge .row { display: flex; gap: 10px; align-items: baseline; padding: 2px 0; }
+.gauge span { color: var(--dim); font-size: 11px; width: 34px; }
+.gauge b { font-size: 22px; color: #fff; min-width: 58px; text-align: right; }
+.gauge i { font-style: normal; color: var(--dim); font-size: 11px; }
+.bar { height: 10px; background: #17242f; border-radius: 5px; overflow: hidden; }
+.bar > div { height: 100%; width: 70%; background: var(--cyan); border-radius: 5px; transition: width .08s linear; }
+#err-fill { background: var(--green) !important; }
+.bar-label { font-size: 11px; color: var(--dim); margin-bottom: 4px; }
+#err-val { font-size: 12px; color: var(--cyan); margin-top: 6px; text-align: right; }
+
+#pitch-label {
+  position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+  background: rgba(10,16,22,0.72); border: 1px solid #223140;
+  border-radius: 8px; padding: 10px 22px;
+  letter-spacing: 2px; color: var(--orange); font-weight: bold;
+}
+#msg {
+  position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
+  font-size: 26px; font-weight: bold; letter-spacing: 3px;
+  opacity: 0; transition: opacity .25s;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+}
+#legend {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  background: rgba(10,16,22,0.72); border: 1px solid #223140;
+  border-radius: 8px; padding: 8px 16px; font-size: 12px; color: var(--dim);
+  text-align: center; line-height: 1.7;
+}
+#legend b { color: #fff; }
+
+/* ---------------- touch controls (iPad) ---------------- */
+#touch-ui {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+#stick-zone {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 55%;
+  pointer-events: auto; touch-action: none;
+}
+#stick-base, #stick-knob {
+  position: fixed; display: none;
+  transform: translate(-50%, -50%);
+  border-radius: 50%; pointer-events: none;
+}
+#stick-base {
+  width: 124px; height: 124px;
+  border: 2px solid rgba(255,255,255,0.25);
+  background: rgba(10,16,22,0.35);
+}
+#stick-knob {
+  width: 54px; height: 54px;
+  background: rgba(56,225,255,0.5);
+}
+#thr-track {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  width: 48px; height: 38vh;
+  border: 2px solid #223140; border-radius: 24px;
+  background: rgba(10,16,22,0.6);
+  pointer-events: auto; touch-action: none;
+  overflow: hidden;
+}
+#thr-touch-fill {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 75%; background: rgba(56,225,255,0.45);
+}
+#touch-btns {
+  position: absolute; top: 175px; right: 14px;
+  display: flex; gap: 8px; pointer-events: auto;
+}
+#touch-btns button {
+  font: inherit; font-size: 13px;
+  padding: 10px 14px; border-radius: 7px;
+  border: 1px solid #2c4258;
+  background: rgba(10,16,22,0.7); color: #dfe9f2;
+}
+#rotate-hint {
+  position: fixed; inset: 0; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(4,8,12,0.88);
+  z-index: 20; font-size: 20px; letter-spacing: 3px;
+  color: var(--cyan);
+}
+body.touch-device.flying #rotate-hint { display: flex; }
+@media (orientation: landscape) {
+  body.touch-device.flying #rotate-hint { display: none; }
+}

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>BREAKING BALL — Carrier Approach</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23fff' stroke='%23000' stroke-width='6'/%3E%3Cpath d='M50 8v84M12 30c25 18 51 18 76 0M12 70c25-18 51-18 76 0' stroke='%23000' stroke-width='6' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="view"></div>
+
+<!-- flight HUD -->
+<div id="hud-flight">
+  <div id="pitch-label"></div>
+  <div class="gauge left-top">
+    <div class="row"><span>SPD</span><b id="spd">0</b><i>kts</i></div>
+    <div class="row"><span>ALT</span><b id="alt">0</b><i>ft AGL</i></div>
+    <div class="row"><span>VS</span><b id="vs">0</b><i>m/s ↓</i></div>
+  </div>
+  <div class="gauge right-top">
+    <div class="bar-label">THROTTLE <kbd>W/S</kbd></div>
+    <div class="bar"><div id="thr-fill"></div></div>
+    <div class="bar-label" style="margin-top:10px">ON-PATH <kbd>H</kbd> hint</div>
+    <div class="bar"><div id="err-fill"></div></div>
+    <div id="err-val"></div>
+  </div>
+  <div id="msg"></div>
+  <div id="legend">
+    <b>↑↓</b> pitch (↓ pulls nose up) &nbsp;·&nbsp; <b>←→</b> roll &nbsp;·&nbsp;
+    <b>A/D</b> rudder &nbsp;·&nbsp; <b>W/S</b> throttle<br>
+    <b>C</b> camera &nbsp;·&nbsp; <b>R</b> restart &nbsp;·&nbsp; <b>ESC</b> pause
+  </div>
+  <div id="touch-ui" style="display:none">
+    <div id="stick-zone"></div>
+    <div id="stick-base"></div>
+    <div id="stick-knob"></div>
+    <div id="thr-track"><div id="thr-touch-fill"></div></div>
+    <div id="touch-btns">
+      <button id="tb-cam">CAM</button>
+      <button id="tb-rst">RST</button>
+      <button id="tb-pause">❚❚</button>
+    </div>
+  </div>
+  <div id="rotate-hint">↻ ROTATE TO LANDSCAPE</div>
+</div>
+
+<!-- loading -->
+<div class="screen visible" id="loading">
+  <div class="panel"><h1>BREAKING BALL</h1><p>loading three.js from CDN… needs an internet connection once.</p></div>
+</div>
+
+<!-- main menu -->
+<div class="screen" id="menu">
+  <div class="panel wide">
+    <h1>BREAKING BALL</h1>
+    <p class="sub">CARRIER APPROACH · FLY THE PITCH, CATCH THE WIRE</p>
+    <p class="sub dim">Every approach is a baseball pitch scaled up 150×. Trace the ghost ribbon to the boat. Catch wire 2 or 3 at the speed window for an OK.</p>
+    <div id="menu-list"></div>
+    <p class="sub dim foot">Keyboard required · progress saves automatically</p>
+  </div>
+</div>
+
+<!-- briefing -->
+<div class="screen" id="brief">
+  <div class="panel wide">
+    <h2 id="brief-title"></h2>
+    <p class="sub" id="brief-tag"></p>
+    <p id="brief-desc"></p>
+    <div class="cols">
+      <table id="brief-stats"></table>
+      <canvas id="brief-side" width="300" height="200"></canvas>
+      <canvas id="brief-top" width="300" height="200"></canvas>
+    </div>
+    <button class="btn primary" id="brief-start">TAKE THE DECK ▸</button>
+  </div>
+</div>
+
+<!-- debrief -->
+<div class="screen" id="debrief">
+  <div class="panel wide">
+    <h2>LANDING DEBRIEF</h2>
+    <div class="deb-head">
+      <span class="grade" id="deb-grade"></span>
+      <span id="deb-score"></span>
+    </div>
+    <ul id="deb-notes"></ul>
+    <div class="cols">
+      <canvas id="deb-side" width="340" height="185"></canvas>
+      <canvas id="deb-top" width="340" height="185"></canvas>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="deb-retry">RETRY <kbd>R</kbd></button>
+      <button class="btn primary" id="deb-next"><span id="deb-next-label"></span> ⏎</button>
+      <button class="btn" id="deb-menu">MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- pause -->
+<div class="screen" id="pause">
+  <div class="panel">
+    <h2>PAUSED</h2>
+    <div class="btnrow col">
+      <button class="btn primary" id="pause-resume">RESUME ⏎</button>
+      <button class="btn" id="pause-restart">RESTART APPROACH</button>
+      <button class="btn" id="pause-quit">ABANDON TO MENU</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

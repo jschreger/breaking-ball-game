@@ -24,9 +24,9 @@ Needs a one-time internet connection for the three.js CDN module. Keyboard requi
 
 ## Controls
 
-**Keyboard:** ↑↓ pitch (↓ pulls nose up) · ←→ roll · A/D rudder · W/S throttle · C camera · R restart · Esc pause
+**Keyboard:** ↑↓ pitch (↓ pulls nose up) · ←→ roll · A/D rudder · W/S throttle · P call pitch · C camera · R restart · Esc pause
 
-**Touch (iPad):** left half of screen = virtual stick (drag up = nose up, sideways = roll) · right-edge slider = throttle · CAM / RST / ❚❚ buttons. Play in landscape.
+**Touch (iPad):** D-pad buttons (▲▼ pitch, ◀▶ turn) bottom-left · throttle slider right edge · PITCH / CAM / RST / ❚❚ buttons. Play in landscape.
 
 ## The roster
 
@@ -59,22 +59,26 @@ js/pitch.js    Baseball physics: gravity + linear drag + Magnus lift (spin axis 
                initial direction until the ball crosses the plate at 2.6 ft.
                Knuckleball wobble = seeded sinusoid sum (identical every attempt).
 js/mapper.js   Uniform scale s = approachLength / 60.5 ft. Plate → touchdown point,
-               release point → 2.8 km astern at ~170 m. Preserves all break shapes,
+               release point → 3.4 km astern at ~203 m. Preserves all break shapes,
                including lateral ones (the reason this game is 3D).
-js/flight.js   Arcade jet: stick rates + bank-induced turn, energy model (diving
+js/flight.js   Arcade plane: stick rates + bank-induced turn, energy model (diving
                gains speed, climbing bleeds it), velocity chases the nose, slow
-               flight sags toward the sea.
+               flight sags toward the sea. Nothing flies itself.
 js/scoring.js  Per-frame distance-to-ghost-polyline; wire bands, trap-zone checks,
                grade logic.
-js/scene.js    Three.js: ocean swell, carrier with painted deck + arresting wires,
-               jet, pulsing ghost ribbon with rings, three cameras.
-js/hud.js      Menus, briefing (with side/top ghost previews), HUD, debrief plots
-               overlaying your trace on the ghost.
-js/main.js     State machine, input, persistence.
+js/scene.js    Three.js: ocean swell, big carrier with painted deck, arresting wires
+               and parked planes, the baseball-with-wings player plane, guidance
+               gates (no ribbon), three cameras.
+js/hud.js      Menu, in-game pitch selector, HUD with gate guidance arrow, debrief
+               plots overlaying your trace on the ideal path.
+js/touch.js    iPad controls: D-pad turn buttons, throttle slider, PITCH/CAM/RST/pause.
+js/main.js     State machine (menu → cruise → approach → debrief), input, persistence.
 ```
 
 ### Design numbers
 
-- Approach span: 2800 m horizontal, start ≈ 171 m ASL → glideslope ≈ 3°
-- Deck: 290 × 74 m; trap zone z ∈ [45, 115]; wires at z = 70/78/86/94
-- Break scaling: 1 ft of pitch break ≈ 46 m of aircraft path deviation
+- Approach span: 3400 m horizontal, start ≈ 203 m ASL → glideslope ≈ 3°
+- Carrier: 406 × 104 m (1.4× scale), deck top 21 m; trap zone z ∈ [63, 161]
+- Wires at world z = 98 / 109 / 120 / 131 (±4.2 m catch bands)
+- Break scaling: 1 ft of pitch break ≈ 51 m of aircraft path deviation
+- Guidance: 13 gates along the path (entry gate 26 m radius, rest 15 m) — no ribbon

@@ -5,10 +5,10 @@ import * as THREE from 'three';
 
 const G = 9.81;
 export const CRUISE_REF_MS = 92;   // full-throttle level speed
-const ALIGN_RATE = 2.6;            // how fast velocity follows the nose
-const PITCH_RATE = 1.05;
-const ROLL_RATE = 2.3;
-const YAW_RATE = 0.45;
+const ALIGN_RATE = 2.2;            // velocity chases the nose — drifty, you fly it
+const PITCH_RATE = 1.45;           // stronger stick: the plane responds to YOU
+const ROLL_RATE = 3.1;
+const YAW_RATE = 0.5;
 
 export class Aircraft {
   constructor() {

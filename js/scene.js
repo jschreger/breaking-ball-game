@@ -1,40 +1,38 @@
-// scene.js — Three.js world: ocean, carrier, jet, ghost ribbon, cameras.
+// scene.js — Three.js world: ocean, carrier, baseball-plane, gates, cameras.
+// Designer spec: plane = baseball with wings; carrier bigger, with parked
+// planes; NO ghost ribbon — the player flies orange gates themselves.
 
 import * as THREE from 'three';
 
 const DECK_TOP = 21;
 const HULL_LEN = 300, DECK_W = 74, DECK_L = 290;
+const SHIP_SCALE = 1.4;            // XZ only — deck height stays at 21 m
 
 function makeDeckTexture() {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 2048;   // u across width (x), v along length (z)
   const g = c.getContext('2d');
   g.fillStyle = '#4c5157'; g.fillRect(0, 0, c.width, c.height);
-  // subtle weathering
   for (let i = 0; i < 900; i++) {
     g.fillStyle = `rgba(20,22,25,${Math.random() * 0.08})`;
     const w = 4 + Math.random() * 40;
     g.fillRect(Math.random() * c.width, Math.random() * c.height, w, 2 + Math.random() * 8);
   }
-  // landing area (z 45..115 world -> v coords). Deck z: -145..+145 maps to v: 2048..0
   const zToV = z => ((145 - z) / 290) * c.height;
   const xToU = x => ((x + DECK_W / 2) / DECK_W) * c.width;
 
+  // landing area (local z 45..115 → world 63..161 after 1.4x scale)
   g.fillStyle = 'rgba(30,32,36,0.55)';
   g.fillRect(xToU(-34), zToV(115), xToU(34) - xToU(-34), zToV(45) - zToV(115));
-
   g.strokeStyle = '#e8e8e8'; g.lineWidth = 6;
   g.strokeRect(xToU(-34), zToV(115), xToU(34) - xToU(-34), zToV(45) - zToV(115));
-  // centerline dashes through the landing area and down the deck
   g.setLineDash([40, 28]);
   g.beginPath(); g.moveTo(c.width / 2, 0); g.lineTo(c.width / 2, c.height); g.stroke();
   g.setLineDash([]);
-  // wire hash marks
   [70, 78, 86, 94].forEach(z => {
     g.fillStyle = '#f2f2f2';
     g.fillRect(xToU(-30), zToV(z) - 3, xToU(30) - xToU(-30), 6);
   });
-  // deck number near bow + angled-deck stripe for flavor
   g.save();
   g.translate(c.width / 2, zToV(-100)); g.rotate(Math.PI);
   g.fillStyle = '#ffffff'; g.font = 'bold 120px monospace'; g.textAlign = 'center';
@@ -43,6 +41,24 @@ function makeDeckTexture() {
   const tex = new THREE.CanvasTexture(c);
   tex.anisotropy = 4;
   return tex;
+}
+
+const WIRES = [70, 78, 86, 94]; // local z — world z = local * 1.4
+
+// simplified parked baseball-plane for the deck
+function buildParkedPlane() {
+  const g = new THREE.Group();
+  const gray = new THREE.MeshStandardMaterial({ color: 0x9aa2a9, roughness: 0.6 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x565b60, roughness: 0.7 });
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 10), gray);
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(10, 0.26, 3), gray);
+  wing.position.z = 0.5;
+  const stab = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.2, 1.5), gray);
+  stab.position.z = 4.2;
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.6, 1.5), dark);
+  fin.position.set(0, 0.9, 4.2);
+  g.add(ball, wing, stab, fin);
+  return g;
 }
 
 function buildCarrier() {
@@ -63,7 +79,6 @@ function buildCarrier() {
   deckSlab.position.y = DECK_TOP - 0.6;
   ship.add(deckSlab, deckTop);
 
-  // island (starboard)
   const island = new THREE.Group();
   const tower = new THREE.Mesh(new THREE.BoxGeometry(10, 16, 26), hullMat);
   tower.position.y = 8;
@@ -73,7 +88,6 @@ function buildCarrier() {
   island.position.set(DECK_W / 2 - 7, DECK_TOP + 1, -18);
   ship.add(island);
 
-  // arresting wires
   const wireMats = [];
   WIRES.forEach(wz => {
     const m = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5, emissive: 0x000000 });
@@ -84,50 +98,65 @@ function buildCarrier() {
     ship.add(wire);
   });
 
+  // parked planes on the forward deck
+  for (let i = 0; i < 5; i++) {
+    const p = buildParkedPlane();
+    p.position.set(-20 + (i % 2) * 9, DECK_TOP + 1.4, -28 - i * 19);
+    p.rotation.y = Math.PI + (i - 2) * 0.14;   // facing bow, staggered
+    ship.add(p);
+  }
+
+  ship.scale.set(SHIP_SCALE, 1, SHIP_SCALE);   // bigger, same deck height
   ship.userData.wireMats = wireMats;
   return ship;
 }
-const WIRES = [70, 78, 86, 94];
 
+// the player's plane: a BASEBALL WITH WINGS
 function buildJet() {
   const jet = new THREE.Group();
-  const body = new THREE.MeshStandardMaterial({ color: 0xbfc7cc, roughness: 0.45, metalness: 0.35 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x30353a, roughness: 0.6 });
+  const white = new THREE.MeshStandardMaterial({ color: 0xf4f4f4, roughness: 0.35 });
+  const red = new THREE.MeshStandardMaterial({ color: 0xd42a2a, roughness: 0.5 });
 
-  const fus = new THREE.Mesh(new THREE.CapsuleGeometry(1.05, 8.5, 4, 12), body);
-  fus.rotation.x = Math.PI / 2;   // long axis along z
-  jet.add(fus);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(1.7, 20, 16), white);
+  jet.add(ball);
 
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(1.02, 3, 12), dark);
-  nose.rotation.x = -Math.PI / 2;
-  nose.position.z = -7.2;
-  jet.add(nose);
+  // red stitching
+  const seamGeo = new THREE.TorusGeometry(1.71, 0.09, 8, 40, Math.PI * 1.25);
+  const s1 = new THREE.Mesh(seamGeo, red);
+  s1.rotation.set(0.55, 0, 0.45);
+  const s2 = new THREE.Mesh(seamGeo, red);
+  s2.rotation.set(-0.55, Math.PI, -0.45);
+  jet.add(s1, s2);
 
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(11.5, 0.28, 3.6), body);
-  wing.position.z = 0.6;
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 3.4), white);
+  wing.position.set(0, -0.2, 0.6);
   jet.add(wing);
-
-  const stab = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.22, 1.8), body);
-  stab.position.z = 5.2; jet.add(stab);
-
   [-1, 1].forEach(s => {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.4, 2.2), dark);
-    fin.position.set(s * 2.1, 1.2, 5.0);
-    fin.rotation.z = -s * 0.16;
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.34, 3.4), red);
+    tip.position.set(s * 5.3, -0.2, 0.6);
+    jet.add(tip);
+  });
+
+  const stab = new THREE.Mesh(new THREE.BoxGeometry(5, 0.24, 1.7), white);
+  stab.position.z = 4.6; jet.add(stab);
+  [-1, 1].forEach(s => {
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.0, 1.9), red);
+    fin.position.set(s * 1.9, 1.0, 4.5);
+    fin.rotation.z = -s * 0.2;
     jet.add(fin);
   });
 
   const canopy = new THREE.Mesh(
-    new THREE.SphereGeometry(0.75, 12, 10),
+    new THREE.SphereGeometry(0.7, 12, 10),
     new THREE.MeshStandardMaterial({ color: 0x27414f, roughness: 0.15, metalness: 0.7 })
   );
-  canopy.scale.set(1, 0.75, 2.1);
-  canopy.position.set(0, 0.85, -2.6);
+  canopy.scale.set(1, 0.7, 1.6);
+  canopy.position.set(0, 1.1, -0.6);
   jet.add(canopy);
 
   const glowMat = new THREE.MeshBasicMaterial({ color: 0xff8830, transparent: true, opacity: 0.9 });
-  const glow = new THREE.Mesh(new THREE.CircleGeometry(0.8, 12), glowMat);
-  glow.position.z = 7.05;
+  const glow = new THREE.Mesh(new THREE.CircleGeometry(0.7, 12), glowMat);
+  glow.position.z = 6.3;
   glow.rotation.y = Math.PI;
   jet.add(glow);
   jet.userData.glowMat = glowMat;
@@ -146,8 +175,7 @@ export class Scene3D {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x8fb8d9);
-    this.scene.fog = new THREE.Fog(0x8fb8d9, 1800, 11000);
-
+    this.scene.fog = new THREE.Fog(0x8fb8d9, 1800, 12000);
     this.camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 40000);
 
     const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x2a3b4a, 0.9);
@@ -155,10 +183,9 @@ export class Scene3D {
     sun.position.set(-600, 800, 500);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
-    Object.assign(sun.shadow.camera, { left: -260, right: 260, top: 260, bottom: -260, far: 3000 });
+    Object.assign(sun.shadow.camera, { left: -300, right: 300, top: 300, bottom: -300, far: 3000 });
     this.scene.add(hemi, sun);
 
-    // ocean — animated near field + static far plane
     this.oceanGeo = new THREE.PlaneGeometry(9000, 9000, 56, 56);
     this.ocean = new THREE.Mesh(
       this.oceanGeo,
@@ -166,8 +193,7 @@ export class Scene3D {
     );
     this.ocean.rotation.x = -Math.PI / 2;
     this.ocean.receiveShadow = true;
-    const basePos = this.oceanGeo.attributes.position;
-    this.oceanBase = new Float32Array(basePos.array);
+    this.oceanBase = new Float32Array(this.oceanGeo.attributes.position.array);
     this.scene.add(this.ocean);
 
     const farOcean = new THREE.Mesh(
@@ -181,14 +207,15 @@ export class Scene3D {
     this.carrier = buildCarrier();
     this.scene.add(this.carrier);
     this.jet = buildJet();
-    this.jet.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
+    this.jet.traverse(o => { if (o.isMesh) o.castShadow = true; });
     this.scene.add(this.jet);
 
-    // ghost ribbon group
-    this.ghostGroup = new THREE.Group();
-    this.scene.add(this.ghostGroup);
+    this.gateGroup = new THREE.Group();
+    this.scene.add(this.gateGroup);
+    this.gates = [];
+    this.gatePts = [];
 
-    this.camMode = 0; // 0 chase, 1 cockpit, 2 tower
+    this.camMode = 0;
     this._boomT = -1;
     this._boom = null;
     this._time = 0;
@@ -200,40 +227,43 @@ export class Scene3D {
     });
   }
 
-  setGhost(pts) {
-    while (this.ghostGroup.children.length) {
-      const c = this.ghostGroup.children.pop();
-      if (c.geometry) c.geometry.dispose();
-      if (c.material) c.material.dispose();
-    }
-    const v3 = pts.map(p => new THREE.Vector3(p.x, p.y, p.z));
-    const curve = new THREE.CatmullRomCurve3(v3);
-    const tube = new THREE.Mesh(
-      new THREE.TubeGeometry(curve, 420, 2.1, 8, false),
-      new THREE.MeshBasicMaterial({
-        color: 0x38e1ff, transparent: true, opacity: 0.26,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      })
-    );
-    this.ghostGroup.add(tube);
+  // GATES instead of a ribbon — the player flies them, nothing flies for them.
+  setGates(pts) {
+    this.clearGates();
+    const n = pts.length;
+    const every = Math.max(10, Math.floor(n / 13));
+    for (let i = every; i < n - 2; i += every) this.gatePts.push({ pos: pts[i], next: pts[i + 1] });
+    this.gatePts.push({ pos: pts[n - 1], next: pts[n - 2] });   // touchdown gate
 
-    const ringGeo = new THREE.TorusGeometry(5.5, 0.45, 8, 24);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x9fefff, transparent: true, opacity: 0.5 });
-    for (let i = 6; i < v3.length - 1; i += 14) {
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.position.copy(v3[i]);
-      ring.lookAt(v3[i + 1]);
-      this.ghostGroup.add(ring);
+    this.gates = this.gatePts.map((gp, idx) => {
+      const entry = idx === 0;
+      const geo = new THREE.TorusGeometry(entry ? 26 : 15, entry ? 1.2 : 0.7, 8, 28);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xff9f43, transparent: true, opacity: 0.85 });
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(gp.pos.x, gp.pos.y, gp.pos.z);
+      m.lookAt(gp.next.x, gp.next.y, gp.next.z);
+      this.gateGroup.add(m);
+      return m;
+    });
+    this.setNextGate(0);
+  }
+
+  setNextGate(i) {
+    this.nextGateIdx = i;
+    this.gates.forEach((g, idx) => {
+      g.visible = idx >= i;
+      const isNext = idx === i;
+      g.material.color.setHex(isNext ? 0xff9f43 : 0x38e1ff);
+      g.material.opacity = isNext ? 0.9 : 0.15;
+    });
+  }
+
+  clearGates() {
+    for (const g of this.gates) {
+      this.gateGroup.remove(g);
+      g.geometry.dispose(); g.material.dispose();
     }
-    // touchdown basket
-    const end = v3[v3.length - 1];
-    const basket = new THREE.Mesh(
-      new THREE.TorusGeometry(9, 0.7, 10, 28),
-      new THREE.MeshBasicMaterial({ color: 0xff9f43, transparent: true, opacity: 0.85 })
-    );
-    basket.position.copy(end);
-    basket.lookAt(v3[v3.length - 4]);
-    this.ghostGroup.add(basket);
+    this.gates = []; this.gatePts = [];
   }
 
   flashWire(idx) {
@@ -268,7 +298,7 @@ export class Scene3D {
       lookAt = pos.clone().addScaledVector(fwd, 60);
       this.camera.position.copy(desired);
     } else {
-      desired = new THREE.Vector3(52, DECK_TOP + 26, 148);
+      desired = new THREE.Vector3(70, DECK_TOP + 30, 205);
       lookAt = pos;
       this.camera.position.lerp(desired, 1 - Math.exp(-10 * dt));
     }
@@ -277,7 +307,6 @@ export class Scene3D {
 
   render(dt) {
     this._time += dt;
-    // gentle ocean swell
     const p = this.oceanGeo.attributes.position;
     const arr = p.array, base = this.oceanBase;
     for (let i = 0; i < arr.length; i += 3) {
@@ -288,14 +317,12 @@ export class Scene3D {
     }
     p.needsUpdate = true;
 
-    // pulsing ghost
-    this.ghostGroup.children.forEach((c, i) => {
-      if (c.material && c.material.transparent && i > 0) {
-        c.material.opacity = 0.35 + 0.25 * Math.sin(this._time * 3 + i * 0.4);
-      }
-    });
+    // pulse ONLY the next gate
+    if (this.gates[this.nextGateIdx || 0]) {
+      const g = this.gates[this.nextGateIdx];
+      g.material.opacity = 0.7 + 0.25 * Math.sin(this._time * 4);
+    }
 
-    // explosion / splash animation
     if (this._boom && this._boomT >= 0) {
       this._boomT += dt;
       const s = 2 + this._boomT * 26;

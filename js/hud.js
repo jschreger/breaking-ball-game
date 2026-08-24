@@ -1,4 +1,4 @@
-// hud.js — DOM overlay management: menus, briefing, HUD readouts, debrief.
+// hud.js — DOM overlay: menu, in-game pitch selector, HUD, gate guidance, debrief.
 
 import { KT_TO_MS } from './mapper.js';
 
@@ -10,18 +10,20 @@ function fmtGrade(g) {
 
 export class HUD {
   constructor() {
-    this.screens = ['loading', 'menu', 'brief', 'debrief', 'pause'];
+    this.screens = ['loading', 'menu', 'selector', 'debrief', 'pause'];
     this.el = {
       spd: $('spd'), alt: $('alt'), vs: $('vs'), thr: $('thr-fill'),
       err: $('err-fill'), errVal: $('err-val'), pitchLabel: $('pitch-label'),
       msg: $('msg'), legend: $('legend'),
+      gateHint: $('gate-hint'), gateArrow: $('gate-arrow'), gateText: $('gate-text'),
     };
   }
 
   showScreen(name) {
     this.screens.forEach(s => $(s).classList.toggle('visible', s === name));
-    $('hud-flight').style.display = name === '' ? 'block' : 'none';
-    if (name !== '') this.el.msg.style.opacity = 0;
+    const inFlight = name === '' || name === 'selector';
+    $('hud-flight').style.display = inFlight ? 'block' : 'none';
+    if (!inFlight) this.el.msg.style.opacity = 0;
   }
 
   // ------------------------------------------------------------- menu
@@ -45,23 +47,25 @@ export class HUD {
     });
   }
 
-  // ------------------------------------------------------------- brief
-  fillBrief(traj, approach, def, onStart) {
-    $('brief-title').textContent = def.name.toUpperCase();
-    $('brief-tag').textContent = def.tag;
-    $('brief-desc').textContent = def.desc;
-    const s = traj.summary;
-    $('brief-stats').innerHTML = `
-      <tr><td>Throw speed</td><td>${s.mph} mph</td></tr>
-      <tr><td>Spin rate</td><td>${s.rpm.toLocaleString()} rpm</td></tr>
-      <tr><td>Vertical break</td><td>${(Math.abs(s.dropIn) / 12).toFixed(1)} ft ${s.dropIn > 0 ? 'DROP' : 'RIDE'}</td></tr>
-      <tr><td>Lateral break</td><td>${(Math.abs(s.sideIn) / 12).toFixed(1)} ft</td></tr>
-      <tr><td>Start altitude</td><td>~${Math.round(approach.startAltM)} m</td></tr>
-      <tr><td>Landing speed window</td><td>${def.landKts[0]}–${def.landKts[1]} kts</td></tr>
-      <tr><td>Ghost length</td><td>${(approach.pathLengthM / 1000).toFixed(1)} km · par ~${Math.round(approach.pathLengthM / ((def.landKts[0] + def.landKts[1]) / 2 * KT_TO_MS))} s</td></tr>`;
-    drawPlot($('brief-side'), approach.pts, null, 'side');
-    drawPlot($('brief-top'), approach.pts, null, 'top');
-    $('brief-start').onclick = onStart;
+  // ------------------------------------------------------------- in-game pitch selector
+  renderSelector(pitches, save, onPick) {
+    const list = $('selector-list');
+    list.innerHTML = '';
+    pitches.forEach((p, i) => {
+      const unlocked = i < save.unlocked;
+      const best = save.best[p.id];
+      const b = document.createElement('button');
+      b.className = 'card' + (unlocked ? '' : ' locked');
+      b.innerHTML = `
+        <div class="card-top">
+          <span class="card-name">${p.name}</span>
+          <span class="card-best">${best != null ? fmtGrade(best.grade) + ' · ' + best.score : (unlocked ? p.tag : '🔒')}</span>
+        </div>
+        <div class="card-tag">${p.mph} MPH · ${p.rpm.toLocaleString()} RPM</div>
+        <div class="card-desc">${unlocked ? p.desc : 'Land the previous pitch to unlock.'}</div>`;
+      if (unlocked) b.onclick = () => onPick(i);
+      list.appendChild(b);
+    });
   }
 
   // ------------------------------------------------------------- flight
@@ -77,12 +81,22 @@ export class HUD {
     this.el.errVal.textContent = `${Math.round(curErr)} m off-path`;
   }
 
+  updateGateHint(text, angleDeg) {
+    this.el.gateHint.style.display = 'block';
+    this.el.gateText.textContent = text;
+    this.el.gateArrow.style.transform = `rotate(${angleDeg.toFixed(1)}deg)`;
+  }
+
+  hideGateHint() {
+    this.el.gateHint.style.display = 'none';
+  }
+
   flashMsg(text, color = '#ffd166') {
     this.el.msg.textContent = text;
     this.el.msg.style.color = color;
     this.el.msg.style.opacity = 1;
     clearTimeout(this._msgT);
-    this._msgT = setTimeout(() => { this.el.msg.style.opacity = 0; }, 2200);
+    this._msgT = setTimeout(() => { this.el.msg.style.opacity = 0; }, 2400);
   }
 
   setPitchLabel(name) { this.el.pitchLabel.textContent = name; }
@@ -109,14 +123,15 @@ export function drawPlot(canvas, ghost, flown, mode) {
   ctx.fillStyle = 'rgba(10,16,22,0.85)';
   ctx.fillRect(0, 0, W, H);
 
+  // flown path can be sparse vs ghost — normalize both together
   const ptsOf = p => mode === 'side'
-    ? [p.z, p.y]   // side profile: distance-to-ship vs altitude
-    : [p.x, -p.z]; // top-down: lateral vs along-track
+    ? [p.z, p.y]
+    : [p.x, -p.z];
 
   const all = flown ? [...ghost, ...flown] : ghost;
-  const proj = all.map(ptsOf);
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  proj.forEach(([x, y]) => {
+  all.forEach(p => {
+    const [x, y] = ptsOf(p);
     minX = Math.min(minX, x); maxX = Math.max(maxX, x);
     minY = Math.min(minY, y); maxY = Math.max(maxY, y);
   });
@@ -145,5 +160,5 @@ export function drawPlot(canvas, ghost, flown, mode) {
 
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '11px monospace';
-  ctx.fillText(mode === 'side' ? 'SIDE VIEW — altitude vs distance' : 'TOP VIEW — lateral vs track', pad, H - 5);
+  ctx.fillText(mode === 'side' ? 'SIDE VIEW — your line vs the ideal' : 'TOP VIEW — your line vs the ideal', pad, H - 5);
 }

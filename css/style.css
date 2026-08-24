@@ -174,24 +174,6 @@ canvas.plot, #brief-side, #brief-top, #deb-side, #deb-top {
   pointer-events: none;
   z-index: 6;
 }
-#stick-zone {
-  position: absolute; left: 0; top: 0; bottom: 0; width: 55%;
-  pointer-events: auto; touch-action: none;
-}
-#stick-base, #stick-knob {
-  position: fixed; display: none;
-  transform: translate(-50%, -50%);
-  border-radius: 50%; pointer-events: none;
-}
-#stick-base {
-  width: 124px; height: 124px;
-  border: 2px solid rgba(255,255,255,0.25);
-  background: rgba(10,16,22,0.35);
-}
-#stick-knob {
-  width: 54px; height: 54px;
-  background: rgba(56,225,255,0.5);
-}
 #thr-track {
   position: absolute; right: 14px; top: 50%;
   transform: translateY(-50%);
@@ -215,6 +197,35 @@ canvas.plot, #brief-side, #brief-top, #deb-side, #deb-top {
   border: 1px solid #2c4258;
   background: rgba(10,16,22,0.7); color: #dfe9f2;
 }
+#gate-hint {
+  position: absolute; top: 92px; left: 50%; transform: translateX(-50%);
+  display: none; align-items: center; gap: 10px;
+  background: rgba(10,16,22,0.72); border: 1px solid #223140;
+  border-radius: 8px; padding: 8px 16px;
+  font-size: 15px; color: #fff; letter-spacing: 1px;
+}
+#gate-arrow { display: inline-block; color: var(--orange); font-size: 20px; transition: transform 0.05s linear; }
+#gate-text { color: var(--orange); }
+
+/* touch d-pad */
+#dpad {
+  position: absolute; left: 18px; bottom: 18px;
+  display: grid; grid-template-columns: repeat(3, 64px);
+  grid-template-rows: repeat(2, 64px); gap: 8px;
+  pointer-events: auto;
+}
+.dp {
+  font: inherit; font-size: 26px; color: #dfe9f2;
+  border-radius: 14px; border: 2px solid #2c4258;
+  background: rgba(10,16,22,0.6);
+  touch-action: none; -webkit-tap-highlight-color: transparent;
+}
+.dp:active { background: rgba(56,225,255,0.35); border-color: var(--cyan); }
+.dp.up { grid-column: 2; grid-row: 1; }
+.dp.left { grid-column: 1; grid-row: 2; }
+.dp.down { grid-column: 2; grid-row: 2; }
+.dp.right { grid-column: 3; grid-row: 2; }
+
 #rotate-hint {
   position: fixed; inset: 0; display: none;
   align-items: center; justify-content: center;

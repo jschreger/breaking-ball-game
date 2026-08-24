@@ -29,17 +29,22 @@
     <div id="err-val"></div>
   </div>
   <div id="msg"></div>
+  <div id="gate-hint"><span id="gate-arrow">➤</span><span id="gate-text"></span></div>
   <div id="legend">
     <b>↑↓</b> pitch (↓ pulls nose up) &nbsp;·&nbsp; <b>←→</b> roll &nbsp;·&nbsp;
     <b>A/D</b> rudder &nbsp;·&nbsp; <b>W/S</b> throttle<br>
-    <b>C</b> camera &nbsp;·&nbsp; <b>R</b> restart &nbsp;·&nbsp; <b>ESC</b> pause
+    <b>P</b> call pitch &nbsp;·&nbsp; <b>C</b> camera &nbsp;·&nbsp; <b>R</b> restart &nbsp;·&nbsp; <b>ESC</b> pause
   </div>
   <div id="touch-ui" style="display:none">
-    <div id="stick-zone"></div>
-    <div id="stick-base"></div>
-    <div id="stick-knob"></div>
+    <div id="dpad">
+      <button class="dp up" data-c="pitch:1">▲</button>
+      <button class="dp left" data-c="roll:-1">◀</button>
+      <button class="dp down" data-c="pitch:-1">▼</button>
+      <button class="dp right" data-c="roll:1">▶</button>
+    </div>
     <div id="thr-track"><div id="thr-touch-fill"></div></div>
     <div id="touch-btns">
+      <button id="tb-pitch">PITCH</button>
       <button id="tb-cam">CAM</button>
       <button id="tb-rst">RST</button>
       <button id="tb-pause">❚❚</button>
@@ -58,24 +63,19 @@
   <div class="panel wide">
     <h1>BREAKING BALL</h1>
     <p class="sub">CARRIER APPROACH · FLY THE PITCH, CATCH THE WIRE</p>
-    <p class="sub dim">Every approach is a baseball pitch scaled up 150×. Trace the ghost ribbon to the boat. Catch wire 2 or 3 at the speed window for an OK.</p>
+    <p class="sub dim">Every approach is a baseball pitch scaled up 150×. Call your pitch in the air, fly through the entry gate, then fly every break yourself — no autopilot. Catch wire 2 or 3.</p>
     <div id="menu-list"></div>
     <p class="sub dim foot">Works with keyboard (desktop) or touch (iPad) · progress saves automatically</p>
   </div>
 </div>
 
-<!-- briefing -->
-<div class="screen" id="brief">
+<!-- in-game pitch selector -->
+<div class="screen" id="selector">
   <div class="panel wide">
-    <h2 id="brief-title"></h2>
-    <p class="sub" id="brief-tag"></p>
-    <p id="brief-desc"></p>
-    <div class="cols">
-      <table id="brief-stats"></table>
-      <canvas id="brief-side" width="300" height="200"></canvas>
-      <canvas id="brief-top" width="300" height="200"></canvas>
-    </div>
-    <button class="btn primary" id="brief-start">TAKE THE DECK ▸</button>
+    <h2>CALL YOUR PITCH</h2>
+    <p class="sub dim">You're airborne. Pick a pitch, fly through the orange entry gate, then fly every break yourself — no autopilot. Catch wire 2 or 3.</p>
+    <div id="selector-list"></div>
+    <p class="sub dim foot">Press <b>P</b> (or the PITCH button) to call a different pitch.</p>
   </div>
 </div>
 

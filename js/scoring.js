@@ -21,9 +21,9 @@ export function crossTrackErr(pos, pts) {
   return Math.sqrt(best);
 }
 
-export const WIRES_Z = [70, 78, 86, 94];       // wire 1..4 positions on deck
-export const WIRE_HALF_W = 2.4;
-export const TRAP_Z_MIN = 45, TRAP_Z_MAX = 115; // legal touchdown zone
+export const WIRES_Z = [98, 109, 120, 131];    // wire 1..4 world z (carrier scaled 1.4×)
+export const WIRE_HALF_W = 4.2;
+export const TRAP_Z_MIN = 63, TRAP_Z_MAX = 161; // legal touchdown zone
 
 export function findWire(z) {
   for (let i = 0; i < WIRES_Z.length; i++) {
